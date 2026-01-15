@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Chato API Docs</title>
+  <style>
+    :root { --bg:#0b0c10; --card:#111318; --text:#e6e6e6; --muted:#a8b0bd; --line:#252a33; }
+    body { margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; background: var(--bg); color: var(--text); }
+    .wrap { max-width: 980px; margin: 0 auto; padding: 24px; }
+    h1 { margin: 0 0 8px; font-size: 28px; }
+    p { margin: 0 0 14px; color: var(--muted); line-height: 1.5; }
+    .card { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 16px; margin: 14px 0; }
+    code, pre { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; }
+    pre { background: #0e1116; border: 1px solid var(--line); border-radius: 10px; padding: 12px; overflow:auto; }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    th, td { text-align: left; padding: 10px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+    th { color: var(--muted); font-weight: 600; }
+    .tag { display:inline-block; padding: 2px 8px; border-radius: 999px; font-size: 12px; border: 1px solid var(--line); margin-right: 6px; }
+    .get { background: rgba(0, 170, 255, 0.12); }
+    .post { background: rgba(0, 255, 153, 0.10); }
+    .auth { background: rgba(255, 204, 0, 0.10); }
+    .small { font-size: 13px; color: var(--muted); }
+    a { color: #8cc8ff; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .hr { height:1px; background: var(--line); margin: 12px 0; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Chato API Documentation</h1>
+    <p>Simple REST API for: Owner dashboard auth, app creation (API key), SDK messaging (auto session creation), and dashboard replies.</p>
+
+    <div class="card">
+      <div class="small"><b>Base URL</b>: <code>http://localhost:3000</code></div>
+      <div class="small"><b>Auth</b>: Dashboard uses <code>Authorization: Bearer &lt;jwt&gt;</code>. SDK uses <code>x-api-key: &lt;apiKey&gt;</code>.</div>
+    </div>
+
+    <div class="card">
+      <h2 style="margin:0 0 6px;">Health</h2>
+      <table>
+        <thead>
+          <tr><th>Method</th><th>Path</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="tag get">GET</span></td>
+            <td><code>/health</code></td>
+            <td>Basic health check (for hosting probes).</td>
+          </tr>
+        </tbody>
+      </table>
+      <pre><code>curl http://localhost:3000/health</code></pre>
+    </div>
+
+    <div class="card">
+      <h2 style="margin:0 0 6px;">Authentication (Owner / Dashboard)</h2>
+      <table>
+        <thead>
+          <tr><th>Method</th><th>Path</th><th>Description</th><th>Body</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="tag post">POST</span></td>
+            <td><code>/auth/register</code></td>
+            <td>Create owner account. Returns JWT.</td>
+            <td><code>{ "email": "a@a.com", "password": "123456" }</code></td>
+          </tr>
+          <tr>
+            <td><span class="tag post">POST</span></td>
+            <td><code>/auth/login</code></td>
+            <td>Login owner. Returns JWT.</td>
+            <td><code>{ "email": "a@a.com", "password": "123456" }</code></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <pre><code># Register
+curl -X POST http://localhost:3000/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"email":"a@a.com","password":"123456"}'
+
+# Login
+curl -X POST http://localhost:3000/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"a@a.com","password":"123456"}'
+</code></pre>
+    </div>
+
+    <div class="card">
+      <h2 style="margin:0 0 6px;">Apps (Owner / Dashboard)</h2>
+      <p class="small">Owner creates an app and receives an <code>apiKey</code> to embed in the Android app.</p>
+      <table>
+        <thead>
+          <tr><th>Method</th><th>Path</th><th>Description</th><th>Auth</th><th>Body</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="tag post">POST</span></td>
+            <td><code>/apps</code></td>
+            <td>Create new app (returns <code>apiKey</code>).</td>
+            <td><span class="tag auth">Bearer JWT</span></td>
+            <td><code>{ "name": "My App" }</code></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <pre><code>curl -X POST http://localhost:3000/apps \
+  -H "Authorization: Bearer &lt;JWT&gt;" \
+  -H "Content-Type: application/json" \
+  -d '{"name":"My App"}'
+</code></pre>
+    </div>
+
+    <div class="card">
+      <h2 style="margin:0 0 6px;">SDK (Android App)</h2>
+      <p class="small">
+        The Android SDK sends messages with <code>x-api-key</code>.  
+        If <code>sessionId</code> is missing on the first message, the backend creates a new session automatically and returns it.
+      </p>
+
+      <table>
+        <thead>
+          <tr><th>Method</th><th>Path</th><th>Description</th><th>Auth</th><th>Body / Query</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="tag post">POST</span></td>
+            <td><code>/sdk/message</code></td>
+            <td>Send customer message. Auto-creates session if needed. Returns <code>sessionId</code>.</td>
+            <td><span class="tag auth">x-api-key</span></td>
+            <td>
+              <code>{ "text": "Hi", "sessionId": "optional", "deviceId": "optional" }</code>
+            </td>
+          </tr>
+          <tr>
+            <td><span class="tag get">GET</span></td>
+            <td><code>/sdk/messages</code></td>
+            <td>Fetch last messages for a session.</td>
+            <td><span class="tag auth">x-api-key</span></td>
+            <td><code>?sessionId=&lt;uuid&gt;</code></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <pre><code># Send first message (creates session)
+curl -X POST http://localhost:3000/sdk/message \
+  -H "x-api-key: &lt;API_KEY&gt;" \
+  -H "Content-Type: application/json" \
+  -d '{"text":"Hello from Android","deviceId":"pixel-7"}'
+
+# Send next message (reuse sessionId)
+curl -X POST http://localhost:3000/sdk/message \
+  -H "x-api-key: &lt;API_KEY&gt;" \
+  -H "Content-Type: application/json" \
+  -d '{"text":"Second message","sessionId":"&lt;SESSION_ID&gt;"}'
+
+# Load messages
+curl "http://localhost:3000/sdk/messages?sessionId=&lt;SESSION_ID&gt;" \
+  -H "x-api-key: &lt;API_KEY&gt;"
+</code></pre>
+    </div>
+
+    <div class="card">
+      <h2 style="margin:0 0 6px;">Dashboard Messaging (Owner)</h2>
+      <p class="small">Owner reads sessions and replies to a customer in a session.</p>
+
+      <table>
+        <thead>
+          <tr><th>Method</th><th>Path</th><th>Description</th><th>Auth</th><th>Body / Query</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="tag get">GET</span></td>
+            <td><code>/dashboard/sessions</code></td>
+            <td>List sessions for an app.</td>
+            <td><span class="tag auth">Bearer JWT</span></td>
+            <td><code>?apiKey=&lt;apiKey&gt;</code></td>
+          </tr>
+          <tr>
+            <td><span class="tag get">GET</span></td>
+            <td><code>/dashboard/messages</code></td>
+            <td>Load messages for a session.</td>
+            <td><span class="tag auth">Bearer JWT</span></td>
+            <td><code>?apiKey=&lt;apiKey&gt;&amp;sessionId=&lt;uuid&gt;</code></td>
+          </tr>
+          <tr>
+            <td><span class="tag post">POST</span></td>
+            <td><code>/dashboard/message</code></td>
+            <td>Reply to a customer in a session.</td>
+            <td><span class="tag auth">Bearer JWT</span></td>
+            <td><code>{ "apiKey":"...", "sessionId":"...", "text":"..." }</code></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <pre><code># List sessions
+curl "http://localhost:3000/dashboard/sessions?apiKey=&lt;API_KEY&gt;" \
+  -H "Authorization: Bearer &lt;JWT&gt;"
+
+# Load messages
+curl "http://localhost:3000/dashboard/messages?apiKey=&lt;API_KEY&gt;&amp;sessionId=&lt;SESSION_ID&gt;" \
+  -H "Authorization: Bearer &lt;JWT&gt;"
+
+# Reply
+curl -X POST http://localhost:3000/dashboard/message \
+  -H "Authorization: Bearer &lt;JWT&gt;" \
+  -H "Content-Type: application/json" \
+  -d '{"apiKey":"&lt;API_KEY&gt;","sessionId":"&lt;SESSION_ID&gt;","text":"How can I help?"}'
+</code></pre>
+    </div>
+
+    <div class="card">
+      <h2 style="margin:0 0 6px;">Realtime DB Data Layout</h2>
+      <pre><code>apps/{apiKey}
+users/{userId}
+sessions/{apiKey}/{sessionId}
+messages/{apiKey}/{sessionId}/{messageId}</code></pre>
+      <p class="small">Messages are append-only; sessions store metadata like last message and timestamps.</p>
+    </div>
+
+  </div>
+</body>
+</html>
