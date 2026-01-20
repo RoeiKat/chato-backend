@@ -22,7 +22,8 @@ export async function getConfig(req, res) {
     theme: {
       bubbleBg: app.theme?.bubbleBg ?? "",
       primary: app.theme?.primary ?? "",
-      iconSvg: app.theme?.iconSvg ?? ""
+      iconSvg: app.theme?.iconSvg ?? "",
+      title: app.theme?.title ?? ""
     }
   });
 }

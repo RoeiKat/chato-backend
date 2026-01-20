@@ -21,7 +21,9 @@ export async function createApp(req, res) {
     theme: {
       bubbleBg: "",
       primary: "",
-      iconSvg: ""
+      iconSvg: "",
+      // NEW: title shown in the chat popup header (SDK falls back to "Support")
+      title: ""
     }
   });
 
@@ -87,6 +89,7 @@ export async function updateAppSettings(req, res) {
     if (theme.bubbleBg !== undefined) updates["theme/bubbleBg"] = String(theme.bubbleBg);
     if (theme.primary !== undefined) updates["theme/primary"] = String(theme.primary);
     if (theme.iconSvg !== undefined) updates["theme/iconSvg"] = String(theme.iconSvg);
+    if (theme.title !== undefined) updates["theme/title"] = String(theme.title);
   }
 
   await appRef.update(updates);
