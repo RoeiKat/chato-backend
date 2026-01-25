@@ -105,6 +105,24 @@ See `doc.html` (open it in a browser) for the complete API specification.
 
 ---
 
+## Deployment
+
+The API base URL depends on the environment:
+
+- Local development:
+  ```
+  http://localhost:3000
+  ```
+
+- Production:
+  ```
+  https://chato-backend.onrender.com
+  ```
+
+See `doc.html` for endpoint details. All paths are relative to the base URL.
+
+---
+
 ## Intended Usage
 
 - Backend service for an Android chat SDK

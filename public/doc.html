@@ -19,25 +19,28 @@
     .tag { display:inline-block; padding: 2px 8px; border-radius: 999px; font-size: 12px; border: 1px solid var(--line); margin-right: 6px; }
     .get { background: rgba(0, 170, 255, 0.12); }
     .post { background: rgba(0, 255, 153, 0.10); }
-    .patch { background: rgba(255, 140, 0, 0.10); }
-    .del { background: rgba(255, 89, 100, 0.12); }
     .auth { background: rgba(255, 204, 0, 0.10); }
     .small { font-size: 13px; color: var(--muted); }
     a { color: #8cc8ff; text-decoration: none; }
     a:hover { text-decoration: underline; }
     .hr { height:1px; background: var(--line); margin: 12px 0; }
-    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; }
   </style>
 </head>
 <body>
   <div class="wrap">
     <h1>Chato API Documentation</h1>
-    <p>REST API for: owner auth + dashboard, app (API key) management, SDK messaging + config, and owner utilities (shifts + reminders).</p>
+    <p>Simple REST API for: Owner dashboard auth, app creation (API key), SDK messaging (auto session creation), and dashboard replies.</p>
 
     <div class="card">
-      <div class="small"><b>Auth</b>:</div>
-      <div class="small">• Dashboard / Apps: <code>Authorization: Bearer &lt;jwt&gt;</code></div>
-      <div class="small">• SDK: <code>x-api-key: &lt;apiKey&gt;</code></div>
+      <div class="small"><b>Base URL</b>: <code>https://chato-backend.onrender.com</code></div>
+      <div class="small"><b>Auth</b>: Dashboard uses <code>Authorization: Bearer &lt;jwt&gt;</code>. SDK uses <code>x-api-key: &lt;apiKey&gt;</code>.</div>
+    </div>
+
+    <div class="card">
+      <div class="small"><b>Base URL</b>:</div>
+      <div class="small">Production: <code>https://chato-backend.onrender.com</code></div>
+      <div class="small">Local dev: <code>http://localhost:3000</code></div>
+      <div class="small" style="margin-top:6px;">All paths below are shown as absolute URLs in the curl examples.</div>
     </div>
 
     <div class="card">
@@ -54,7 +57,7 @@
           </tr>
         </tbody>
       </table>
-      <pre><code>curl http://localhost:3000/health</code></pre>
+      <pre><code>curl https://chato-backend.onrender.com/health</code></pre>
     </div>
 
     <div class="card">
@@ -80,12 +83,12 @@
       </table>
 
       <pre><code># Register
-curl -X POST http://localhost:3000/auth/register \
+curl -X POST https://chato-backend.onrender.com/auth/register \
   -H "Content-Type: application/json" \
   -d '{"email":"a@a.com","password":"123456"}'
 
 # Login
-curl -X POST http://localhost:3000/auth/login \
+curl -X POST https://chato-backend.onrender.com/auth/login \
   -H "Content-Type: application/json" \
   -d '{"email":"a@a.com","password":"123456"}'
 </code></pre>
@@ -93,11 +96,10 @@ curl -X POST http://localhost:3000/auth/login \
 
     <div class="card">
       <h2 style="margin:0 0 6px;">Apps (Owner / Dashboard)</h2>
-      <p class="small">Owner creates apps and receives an <code>apiKey</code> to embed in the Android app. Apps can also be listed, deleted, and configured (pre-chat + theme).</p>
-
+      <p class="small">Owner creates an app and receives an <code>apiKey</code> to embed in the Android app.</p>
       <table>
         <thead>
-          <tr><th>Method</th><th>Path</th><th>Description</th><th>Auth</th><th>Body / Notes</th></tr>
+          <tr><th>Method</th><th>Path</th><th>Description</th><th>Auth</th><th>Body</th></tr>
         </thead>
         <tbody>
           <tr>
@@ -107,154 +109,22 @@ curl -X POST http://localhost:3000/auth/login \
             <td><span class="tag auth">Bearer JWT</span></td>
             <td><code>{ "name": "My App" }</code></td>
           </tr>
-          <tr>
-            <td><span class="tag get">GET</span></td>
-            <td><code>/apps</code></td>
-            <td>List all apps for the authenticated owner.</td>
-            <td><span class="tag auth">Bearer JWT</span></td>
-            <td class="small">Sorted by newest first.</td>
-          </tr>
-          <tr>
-            <td><span class="tag del">DELETE</span></td>
-            <td><code>/apps/&lt;apiKey&gt;</code></td>
-            <td>Delete an app (also removes its sessions + messages).</td>
-            <td><span class="tag auth">Bearer JWT</span></td>
-            <td class="small">Path param: <span class="mono">apiKey</span></td>
-          </tr>
-          <tr>
-            <td><span class="tag patch">PATCH</span></td>
-            <td><code>/apps/&lt;apiKey&gt;/settings</code></td>
-            <td>Update app <code>prechat</code> and/or <code>theme</code> settings.</td>
-            <td><span class="tag auth">Bearer JWT</span></td>
-            <td>
-              <div class="small">Send any subset of fields; omitted fields are unchanged.</div>
-              <code>{
-  "prechat": { "q1": "...", "q2": "...", "q3": "...", "faqUrl": "..." },
-  "theme":  { "bubbleBg": "#...", "primary": "#...", "iconSvg": "&lt;svg...&gt;", "title": "Support" }
-}</code>
-            </td>
-          </tr>
         </tbody>
       </table>
 
-      <pre><code># Create app
-curl -X POST http://localhost:3000/apps \
+      <pre><code>curl -X POST https://chato-backend.onrender.com/apps \
   -H "Authorization: Bearer &lt;JWT&gt;" \
   -H "Content-Type: application/json" \
   -d '{"name":"My App"}'
-
-# List apps
-curl http://localhost:3000/apps \
-  -H "Authorization: Bearer &lt;JWT&gt;"
-
-# Update settings (example)
-curl -X PATCH http://localhost:3000/apps/&lt;API_KEY&gt;/settings \
-  -H "Authorization: Bearer &lt;JWT&gt;" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "prechat": { "q1":"Tip1", "q2":"Tip2", "q3":"Tip3", "faqUrl":"" },
-    "theme": { "bubbleBg":"#1C1C1C", "primary":"#FFE95C", "title":"Support" }
-  }'
-
-# Delete app
-curl -X DELETE http://localhost:3000/apps/&lt;API_KEY&gt; \
-  -H "Authorization: Bearer &lt;JWT&gt;"
 </code></pre>
     </div>
 
     <div class="card">
       <h2 style="margin:0 0 6px;">SDK (Android App)</h2>
       <p class="small">
-        The Android SDK uses <code>x-api-key</code>. It can fetch the app configuration (pre-chat + theme),
-        and send messages. If <code>sessionId</code> is missing, a session is created automatically and returned.
+        The Android SDK sends messages with <code>x-api-key</code>.  
+        If <code>sessionId</code> is missing on the first message, the backend creates a new session automatically and returns it.
       </p>
-
-      <table>
-        <thead>
-          <tr><th>Method</th><th>Path</th><th>Description</th><th>Auth</th><th>Body / Notes</th></tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td><span class="tag get">GET</span></td>
-            <td><code>/sdk/config</code></td>
-            <td>Get SDK config for this <code>apiKey</code> (app name, prechat, theme).</td>
-            <td><span class="tag auth">x-api-key</span></td>
-            <td class="small">No body.</td>
-          </tr>
-          <tr>
-            <td><span class="tag post">POST</span></td>
-            <td><code>/sdk/message</code></td>
-            <td>Send a message. Auto-creates session if needed. Returns <code>sessionId</code>.</td>
-            <td><span class="tag auth">x-api-key</span></td>
-            <td>
-              <div class="small"><code>from</code> is normalized to either <code>customer</code> or <code>owner</code> on the backend.</div>
-              <code>{ "text": "Hi", "sessionId": "optional", "from": "customer|owner|bot|agent|support" }</code>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-
-      <pre><code># Get SDK config
-curl http://localhost:3000/sdk/config \
-  -H "x-api-key: &lt;API_KEY&gt;"
-
-# Send first message (creates session)
-curl -X POST http://localhost:3000/sdk/message \
-  -H "x-api-key: &lt;API_KEY&gt;" \
-  -H "Content-Type: application/json" \
-  -d '{"text":"Hello from Android","from":"customer"}'
-
-# Send next message (reuse sessionId)
-curl -X POST http://localhost:3000/sdk/message \
-  -H "x-api-key: &lt;API_KEY&gt;" \
-  -H "Content-Type: application/json" \
-  -d '{"text":"Second message","sessionId":"&lt;SESSION_ID&gt;","from":"customer"}'
-</code></pre>
-    </div>
-
-    <div class="card">
-      <h2 style="margin:0 0 6px;">Dashboard Messaging (Owner)</h2>
-      <p class="small">Owner replies to a session and can mark it as read (resets <code>unreadOwner</code>).</p>
-
-      <table>
-        <thead>
-          <tr><th>Method</th><th>Path</th><th>Description</th><th>Auth</th><th>Body</th></tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td><span class="tag post">POST</span></td>
-            <td><code>/dashboard/message</code></td>
-            <td>Reply to a customer in a session.</td>
-            <td><span class="tag auth">Bearer JWT</span></td>
-            <td><code>{ "apiKey":"...", "sessionId":"...", "text":"How can I help?" }</code></td>
-          </tr>
-          <tr>
-            <td><span class="tag post">POST</span></td>
-            <td><code>/dashboard/session/read</code></td>
-            <td>Mark a session as read (sets <code>unreadOwner</code> to 0 and stores <code>ownerLastReadAt</code>).</td>
-            <td><span class="tag auth">Bearer JWT</span></td>
-            <td><code>{ "apiKey":"...", "sessionId":"..." }</code></td>
-          </tr>
-        </tbody>
-      </table>
-
-      <pre><code># Reply
-curl -X POST http://localhost:3000/dashboard/message \
-  -H "Authorization: Bearer &lt;JWT&gt;" \
-  -H "Content-Type: application/json" \
-  -d '{"apiKey":"&lt;API_KEY&gt;","sessionId":"&lt;SESSION_ID&gt;","text":"How can I help?"}'
-
-# Mark session read
-curl -X POST http://localhost:3000/dashboard/session/read \
-  -H "Authorization: Bearer &lt;JWT&gt;" \
-  -H "Content-Type: application/json" \
-  -d '{"apiKey":"&lt;API_KEY&gt;","sessionId":"&lt;SESSION_ID&gt;"}'
-</code></pre>
-    </div>
-
-    <div class="card">
-      <h2 style="margin:0 0 6px;">Shifts (Owner)</h2>
-      <p class="small">Track work shifts for the authenticated owner.</p>
 
       <table>
         <thead>
@@ -263,79 +133,87 @@ curl -X POST http://localhost:3000/dashboard/session/read \
         <tbody>
           <tr>
             <td><span class="tag post">POST</span></td>
-            <td><code>/dashboard/shifts</code></td>
-            <td>Create a shift.</td>
-            <td><span class="tag auth">Bearer JWT</span></td>
-            <td><code>{ "startedAt": 1700000000000, "endedAt": 1700003600000, "durationMs": 3600000 }</code></td>
+            <td><code>/sdk/message</code></td>
+            <td>Send customer message. Auto-creates session if needed. Returns <code>sessionId</code>.</td>
+            <td><span class="tag auth">x-api-key</span></td>
+            <td>
+              <code>{ "text": "Hi", "sessionId": "optional", "deviceId": "optional" }</code>
+            </td>
           </tr>
           <tr>
             <td><span class="tag get">GET</span></td>
-            <td><code>/dashboard/shifts</code></td>
-            <td>List shifts for a week.</td>
-            <td><span class="tag auth">Bearer JWT</span></td>
-            <td class="small"><code>?weekStart=&lt;ms&gt;</code> optional (defaults to current week start).</td>
+            <td><code>/sdk/messages</code></td>
+            <td>Fetch last messages for a session.</td>
+            <td><span class="tag auth">x-api-key</span></td>
+            <td><code>?sessionId=&lt;uuid&gt;</code></td>
           </tr>
         </tbody>
       </table>
 
-      <pre><code># Create shift
-curl -X POST http://localhost:3000/dashboard/shifts \
-  -H "Authorization: Bearer &lt;JWT&gt;" \
+      <pre><code># Send first message (creates session)
+curl -X POST https://chato-backend.onrender.com/sdk/message \
+  -H "x-api-key: &lt;API_KEY&gt;" \
   -H "Content-Type: application/json" \
-  -d '{"startedAt":1700000000000,"endedAt":1700003600000,"durationMs":3600000}'
+  -d '{"text":"Hello from Android","deviceId":"pixel-7"}'
 
-# List shifts (optional weekStart)
-curl "http://localhost:3000/dashboard/shifts?weekStart=1700000000000" \
-  -H "Authorization: Bearer &lt;JWT&gt;"
+# Send next message (reuse sessionId)
+curl -X POST https://chato-backend.onrender.com/sdk/message \
+  -H "x-api-key: &lt;API_KEY&gt;" \
+  -H "Content-Type: application/json" \
+  -d '{"text":"Second message","sessionId":"&lt;SESSION_ID&gt;"}'
+
+# Load messages
+curl "https://chato-backend.onrender.com/sdk/messages?sessionId=&lt;SESSION_ID&gt;" \
+  -H "x-api-key: &lt;API_KEY&gt;"
 </code></pre>
     </div>
 
     <div class="card">
-      <h2 style="margin:0 0 6px;">Reminders (Owner)</h2>
-      <p class="small">Simple reminders list for the authenticated owner.</p>
+      <h2 style="margin:0 0 6px;">Dashboard Messaging (Owner)</h2>
+      <p class="small">Owner reads sessions and replies to a customer in a session.</p>
 
       <table>
         <thead>
-          <tr><th>Method</th><th>Path</th><th>Description</th><th>Auth</th><th>Body / Notes</th></tr>
+          <tr><th>Method</th><th>Path</th><th>Description</th><th>Auth</th><th>Body / Query</th></tr>
         </thead>
         <tbody>
           <tr>
             <td><span class="tag get">GET</span></td>
-            <td><code>/dashboard/reminders</code></td>
-            <td>List reminders.</td>
+            <td><code>/dashboard/sessions</code></td>
+            <td>List sessions for an app.</td>
             <td><span class="tag auth">Bearer JWT</span></td>
-            <td class="small">Returns newest first.</td>
+            <td><code>?apiKey=&lt;apiKey&gt;</code></td>
+          </tr>
+          <tr>
+            <td><span class="tag get">GET</span></td>
+            <td><code>/dashboard/messages</code></td>
+            <td>Load messages for a session.</td>
+            <td><span class="tag auth">Bearer JWT</span></td>
+            <td><code>?apiKey=&lt;apiKey&gt;&amp;sessionId=&lt;uuid&gt;</code></td>
           </tr>
           <tr>
             <td><span class="tag post">POST</span></td>
-            <td><code>/dashboard/reminders</code></td>
-            <td>Create a reminder.</td>
+            <td><code>/dashboard/message</code></td>
+            <td>Reply to a customer in a session.</td>
             <td><span class="tag auth">Bearer JWT</span></td>
-            <td><code>{ "text": "Call customer back" }</code></td>
-          </tr>
-          <tr>
-            <td><span class="tag del">DELETE</span></td>
-            <td><code>/dashboard/reminders/&lt;id&gt;</code></td>
-            <td>Delete a reminder by id.</td>
-            <td><span class="tag auth">Bearer JWT</span></td>
-            <td class="small">Path param: <span class="mono">id</span></td>
+            <td><code>{ "apiKey":"...", "sessionId":"...", "text":"..." }</code></td>
           </tr>
         </tbody>
       </table>
 
-      <pre><code># List reminders
-curl http://localhost:3000/dashboard/reminders \
+      <pre><code># List sessions
+curl "https://chato-backend.onrender.com/dashboard/sessions?apiKey=&lt;API_KEY&gt;" \
   -H "Authorization: Bearer &lt;JWT&gt;"
 
-# Create reminder
-curl -X POST http://localhost:3000/dashboard/reminders \
+# Load messages
+curl "https://chato-backend.onrender.com/dashboard/messages?apiKey=&lt;API_KEY&gt;&amp;sessionId=&lt;SESSION_ID&gt;" \
+  -H "Authorization: Bearer &lt;JWT&gt;"
+
+# Reply
+curl -X POST https://chato-backend.onrender.com/dashboard/message \
   -H "Authorization: Bearer &lt;JWT&gt;" \
   -H "Content-Type: application/json" \
-  -d '{"text":"Call customer back"}'
-
-# Delete reminder
-curl -X DELETE http://localhost:3000/dashboard/reminders/&lt;REMINDER_ID&gt; \
-  -H "Authorization: Bearer &lt;JWT&gt;"
+  -d '{"apiKey":"&lt;API_KEY&gt;","sessionId":"&lt;SESSION_ID&gt;","text":"How can I help?"}'
 </code></pre>
     </div>
 
@@ -343,12 +221,9 @@ curl -X DELETE http://localhost:3000/dashboard/reminders/&lt;REMINDER_ID&gt; \
       <h2 style="margin:0 0 6px;">Realtime DB Data Layout</h2>
       <pre><code>apps/{apiKey}
 users/{userId}
-emailToUid/{encodedEmail}
 sessions/{apiKey}/{sessionId}
-messages/{apiKey}/{sessionId}/{messageId}
-owners/{ownerId}/shifts/{shiftId}
-owners/{ownerId}/reminders/{reminderId}</code></pre>
-      <p class="small">Messages are append-only; sessions store metadata like last message, timestamps, and unread counters.</p>
+messages/{apiKey}/{sessionId}/{messageId}</code></pre>
+      <p class="small">Messages are append-only; sessions store metadata like last message and timestamps.</p>
     </div>
 
   </div>
