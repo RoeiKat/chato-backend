@@ -9,7 +9,6 @@ export async function createApp(req, res) {
     name: req.body.name,
     createdAt: Date.now(),
 
-    // NEW: pre-chat bot (defaults; user can later blank them)
     prechat: {
       q1: "Hey! this is the support, let's start with what is your name?",
       q2: "And your email?",
@@ -17,12 +16,10 @@ export async function createApp(req, res) {
       faqUrl: ""
     },
 
-    // NEW: theme settings (start empty; SDK falls back to colors.xml + default SVG)
     theme: {
       bubbleBg: "",
       primary: "",
       iconSvg: "",
-      // NEW: title shown in the chat popup header (SDK falls back to "Support")
       title: ""
     }
   });

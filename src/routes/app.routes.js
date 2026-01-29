@@ -1,4 +1,3 @@
-// routes/app.routes.js
 import { Router } from "express";
 import authJwt from "../middleware/authJwt.js";
 import {

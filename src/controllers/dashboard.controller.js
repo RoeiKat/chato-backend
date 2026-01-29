@@ -1,4 +1,3 @@
-// controllers/dashboard.controller.js
 import { db } from "../config/firebase.js";
 import { now } from "../utils/time.js";
 

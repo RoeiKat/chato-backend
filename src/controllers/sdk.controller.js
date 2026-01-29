@@ -37,9 +37,7 @@ export async function sendMessage(req, res) {
   if (!text || typeof text !== "string" || !text.trim()) {
     return res.status(400).json({ error: "text is required" });
   }
-
-  // IMPORTANT: keep frontend stable: only ever write "customer" or "owner"
-  // bot -> owner
+  
   let from = "customer";
   if (fromRaw === "owner" || fromRaw === "bot" || fromRaw === "agent" || fromRaw === "support") {
     from = "owner";
